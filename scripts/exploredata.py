@@ -1,6 +1,8 @@
 import os
+import re
 import json
 import ssl
+from turtle import onclick
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from dotenv import load_dotenv
@@ -41,7 +43,6 @@ def get_geocode(search):
             "components": result["components"],
             "currency": result["annotations"]["currency"]
         }
-        print("returning geocode")
         return response
     return
 
@@ -58,11 +59,22 @@ all_destinations = boxDestinations.findAll('div')
 
 results = []
 for destionation in all_destinations:
+    onclickval = destionation.get('onclick')
+    pattern = "'(.*)'"
+    destination_link = ""
+
+    if onclickval == None:
+        continue
+
+    if match := re.search(pattern, onclickval, re.IGNORECASE):
+        destination_link = match.group(1)
+    
     place_name = destionation.getText().strip()
     if place_name and not in_dictlist('search',place_name, results):
         print(place_name)
         geocode_data = get_geocode(place_name)
         if geocode_data:
+            geocode_data["link"] = destination_link
             results.append(geocode_data)
         
 if (len(results) > 0):
